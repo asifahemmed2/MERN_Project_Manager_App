@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { signUpSchema } from '@/lib/schema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import type z from 'zod';
 import { useSignUpMutation } from '../../hooks/useQuery';
@@ -27,7 +27,7 @@ import { useSignUpMutation } from '../../hooks/useQuery';
 type SignUpForm = z.infer<typeof signUpSchema>;
 const SignUp = () => {
   const { mutate, isPending } = useSignUpMutation();
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const form = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -46,6 +46,7 @@ const SignUp = () => {
         });
 
         form.reset();
+        navigate('/auth/sign-in');
       },
       onError: (error: any) => {
         const errorMessage =

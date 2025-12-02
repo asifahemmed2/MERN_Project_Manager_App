@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import type z from 'zod';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +21,9 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { signInSchema } from '@/lib/schema';
+import { useSignInMutation } from '../../hooks/useQuery';
+import { toast } from 'sonner';
+import { useAuth } from '../../hooks/useAuth';
 
 type SignInForm = z.infer<typeof signInSchema>;
 const SignIn = () => {
@@ -31,8 +34,25 @@ const SignIn = () => {
       password: '',
     },
   });
+
+  const navigate = useNavigate();
+  const { mutate, isPending } = useSignInMutation();
+  const { signIn } = useAuth();
   const handleOnSubmit = (data: SignInForm) => {
-    console.log(data);
+    mutate(data, {
+      onSuccess: (data) => {
+        signIn(data);
+        toast.success('Signed in successfully');
+        form.reset();
+        navigate('/dashboard');
+      },
+      onError: (error: any) => {
+        const errorMessage =
+          error.response?.data?.message || 'An error occurred';
+        console.log(error);
+        toast.error(errorMessage);
+      },
+    });
   };
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/40 p-4">
@@ -101,7 +121,13 @@ const SignIn = () => {
           <CardFooter className="flex items-center justify-center mt-6">
             <div className="flex items-center justify-center">
               <p className="text-sm text-muted-foreground">
-                Don&apos;t have an account? <Link to="/auth/sign-up"  className='text-blue-600 hover:underline'>Sign up</Link>
+                Don&apos;t have an account?{' '}
+                <Link
+                  to="/auth/sign-up"
+                  className="text-blue-600 hover:underline"
+                >
+                  Sign up
+                </Link>
               </p>
             </div>
           </CardFooter>

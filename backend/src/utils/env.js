@@ -7,4 +7,5 @@ export const MONGO_URI = process.env.MONGO_URI;
 export const CLIENT_URL = process.env.CLIENT_URL;
 export const RESEND_API_KEY = process.env.RESEND_API_KEY;
 export const JWT_SECRET = process.env.JWT_SECRET;
+export const ARCJET_KEY = process.env.ARCJET_KEY;
 

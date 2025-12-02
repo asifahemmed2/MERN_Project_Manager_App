@@ -1,11 +1,11 @@
 import { Resend } from 'resend';
-import { CLIENT_URL, RESEND_API_KEY } from './env.js';
+import { CLIENT_URL, RESEND_API_KEY } from '../utils/env.js';
 
 const resend = new Resend(RESEND_API_KEY);
 
 const sendVerificationEmail = async (email, token) => {
-  const verificationUrl = `${CLIENT_URL}/verify-email?token=${token}`;
-  
+  const verificationUrl = `${CLIENT_URL}/auth/verify-email?token=${token}`;
+
   try {
     const { data, error } = await resend.emails.send({
       from: 'Acme <onboarding@resend.dev>',
@@ -24,7 +24,7 @@ const sendVerificationEmail = async (email, token) => {
           <p style="color: #666; word-break: break-all;">${verificationUrl}</p>
           <p style="color: #999; font-size: 12px;">This link will expire in 24 hours.</p>
         </div>
-      `
+      `,
     });
 
     if (error) {
@@ -37,6 +37,6 @@ const sendVerificationEmail = async (email, token) => {
     console.error('Email send error:', error);
     return { success: false, error };
   }
-}
+};
 
 export { sendVerificationEmail };
