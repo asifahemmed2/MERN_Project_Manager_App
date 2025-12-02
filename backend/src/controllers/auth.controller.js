@@ -29,7 +29,7 @@ export const signUp = asyncHandler(async (req, res) => {
     token: verificationToken,
     expiresAt: new Date(Date.now() + 1 * 60 * 60 * 1000),
   });
-  const isEmailSent = await sendVerificationEmail(email, verificationToken);
+  const isEmailSent = await sendVerificationEmail(email, "verify-email" ,verificationToken);
   if (!isEmailSent.success) throw ApiError.internal();
   ApiResponse.created(
     res,
@@ -82,7 +82,7 @@ export const signIn = asyncHandler(async (req, res) => {
       token: verificationToken,
       expiresAt: new Date(Date.now() + 1 * 60 * 60 * 1000),
     });
-    const isEmailSent = await sendVerificationEmail(email, verificationToken);
+    const isEmailSent = await sendVerificationEmail(email, "verify-email", verificationToken);
     if (!isEmailSent.success) throw ApiError.internal();
     ApiResponse.created(
       res,
@@ -99,3 +99,58 @@ export const signIn = asyncHandler(async (req, res) => {
   const data = { userData, token };
   ApiResponse.success(res, data, 'Login successful');
 });
+
+export const resetPasswordRequest = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) throw ApiError.badRequest('User not found');
+  if (!user.isEmailVerified) throw ApiError.badRequest('Email not verified');
+  const existingVerification = await Verification.findOne({
+    userId: user._id,
+  });
+  if (existingVerification && existingVerification.expiresAt > new Date())
+    throw ApiError.badRequest('Reset password request has already sent');
+  if (existingVerification && existingVerification.expiresAt < new Date()) {
+    await Verification.findByIdAndDelete(existingVerification._id);
+  }
+  const resetPasswordToken = generateToken(
+    { userId: user._id, purpose: 'reset-password' },
+    '15m'
+  );
+
+  await Verification.create({
+    userId: user._id,
+    token: resetPasswordToken,
+    expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+  });
+  const isEmailSent = await sendVerificationEmail(email,"reset-password", resetPasswordToken);
+  if (!isEmailSent) throw ApiError.internal("Email couldn't be sent");
+  ApiResponse.success(res, null, 'Reset password request sent successfully');
+});
+
+export const verifyResetPasswordTokenAndResetPassword = asyncHandler(
+  async (req, res) => {
+    const { token, newPassword, confirmPassword } = req.body;
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (!payload) throw ApiError.unauthorized();
+    const { userId, purpose } = payload;
+    if (purpose !== 'reset-password') throw ApiError.unauthorized();
+    const verification = await Verification.findOne({
+      userId,
+      token,
+    });
+    if (!verification) throw ApiError.unauthorized();
+    const isTokenExpired = verification.expiresAt < new Date();
+    if (isTokenExpired) throw ApiError.unauthorized('Token expired');
+    const user = await User.findById(userId);
+    if (!user) throw ApiError.unauthorized();
+    if (newPassword !== confirmPassword)
+      throw ApiError.badRequest('Passwords do not match');
+    const salt = await bcrypt.genSalt(10);
+    const hashPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashPassword;
+    await user.save();
+    await Verification.findByIdAndDelete(verification._id);
+    ApiResponse.success(res, null, 'Password reset successfully');
+  }
+);

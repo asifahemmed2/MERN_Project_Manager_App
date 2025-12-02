@@ -24,6 +24,7 @@ import { signInSchema } from '@/lib/schema';
 import { useSignInMutation } from '../../hooks/useQuery';
 import { toast } from 'sonner';
 import { useAuth } from '../../hooks/useAuth';
+import { Loader2 } from 'lucide-react';
 
 type SignInForm = z.infer<typeof signInSchema>;
 const SignIn = () => {
@@ -113,7 +114,7 @@ const SignIn = () => {
               />
 
               <Button type="submit" className="w-full">
-                Sign In
+                {isPending ? <Loader2 className="animate-spin" /> : 'Sign in'}
               </Button>
             </form>
           </Form>

@@ -3,8 +3,8 @@ import { CLIENT_URL, RESEND_API_KEY } from '../utils/env.js';
 
 const resend = new Resend(RESEND_API_KEY);
 
-const sendVerificationEmail = async (email, token) => {
-  const verificationUrl = `${CLIENT_URL}/auth/verify-email?token=${token}`;
+const sendVerificationEmail = async (email,path,token) => {
+  const verificationUrl = `${CLIENT_URL}/auth/${path}?token=${token}`;
 
   try {
     const { data, error } = await resend.emails.send({
