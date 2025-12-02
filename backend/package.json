@@ -28,6 +28,7 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.0.0",
+    "resend": "^6.5.2",
     "zod": "^4.1.13",
     "zod-express-middleware": "^1.4.0"
   }

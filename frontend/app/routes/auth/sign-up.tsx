@@ -1,7 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { Link } from 'react-router';
-import type z from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -21,9 +17,17 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { signUpSchema } from '@/lib/schema';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { Link } from 'react-router';
+import { toast } from 'sonner';
+import type z from 'zod';
+import { useSignUpMutation } from '../../hooks/useQuery';
 
 type SignUpForm = z.infer<typeof signUpSchema>;
 const SignUp = () => {
+  const { mutate, isPending } = useSignUpMutation();
+  // const navigate = useNavigate();
   const form = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -34,7 +38,22 @@ const SignUp = () => {
     },
   });
   const handleOnSubmit = (data: SignUpForm) => {
-    console.log(data);
+    mutate(data, {
+      onSuccess: () => {
+        toast.success('Email Verification Required', {
+          description:
+            "Please check your email for a verification link. If you don't see it, please check your spam folder.",
+        });
+
+        form.reset();
+      },
+      onError: (error: any) => {
+        const errorMessage =
+          error.response?.data?.message || 'An error occurred';
+        console.log(error);
+        toast.error(errorMessage);
+      },
+    });
   };
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/40 p-4">
@@ -118,8 +137,8 @@ const SignUp = () => {
                 )}
               />
 
-              <Button type="submit" className="w-full">
-                Sign Up
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? 'Signing Up...' : 'Sign Up'}
               </Button>
             </form>
           </Form>
@@ -127,7 +146,13 @@ const SignUp = () => {
           <CardFooter className="flex items-center justify-center mt-6">
             <div className="flex items-center justify-center">
               <p className="text-sm text-muted-foreground">
-                Already have an account? <Link to="/auth/sign-in" className='text-blue-600 hover:underline'>Sign In</Link>
+                Already have an account?{' '}
+                <Link
+                  to="/auth/sign-in"
+                  className="text-blue-600 hover:underline"
+                >
+                  Sign In
+                </Link>
               </p>
             </div>
           </CardFooter>

@@ -10,6 +10,8 @@ import {
 import type { Route } from './+types/root';
 import './app.css';
 import ReactQueryProvider from './providers/react-query';
+import { Toaster } from 'sonner';
+import { AuthProvider } from './providers/auth-provider';
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -53,10 +55,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return;
-  <ReactQueryProvider>
-    <Outlet />
-  </ReactQueryProvider>;
+  return (
+    <ReactQueryProvider>
+      <AuthProvider>
+        <Outlet />
+        <Toaster position="top-center" richColors />
+      </AuthProvider>
+    </ReactQueryProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
